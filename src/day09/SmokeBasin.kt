@@ -3,7 +3,7 @@ package day09
 import java.io.File
 
 fun main() {
-    val lines = File("src/day09/data.txt")
+    val lines = File("data/data09.txt")
         .readLines()
         .map { line -> line.map { it - '0' } }
 
@@ -19,7 +19,7 @@ fun main() {
 
     println(sum)
 
-    var visited = lines.map {
+    val visited = lines.map {
         it.map { false }.toTypedArray()
     }.toTypedArray()
 
