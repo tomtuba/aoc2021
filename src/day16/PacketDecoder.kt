@@ -64,14 +64,11 @@ fun main() {
     // val fileName = "src/day16/sample8.txt"
     val fileName = "data/day16.txt"
 
-    val bits = StringBuilder()
-    File(fileName).readLines().forEach { line -> line.forEach { bits.append(hexToBin(it)) } }
+    val packet = File(fileName).readLines().first()
 
     listOf("C200B40A82","04005AC33890","880086C3E88112","CE00C43D881120","D8005AC2A8F0","F600BC2D8F","9C005AC2F8F0",
-    "9C0141080250320F1802104A08")
+    "9C0141080250320F1802104A08", packet)
         .map{ StringBuilder(it.map { byte -> hexToBin(byte) }.joinToString(""))
         }
         .map{ processPacket(it)}.forEach { println(it) }
-
-    println(processPacket(bits))
 }
