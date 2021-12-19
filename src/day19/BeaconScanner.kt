@@ -2,11 +2,14 @@ package day19
 
 import java.io.File
 import kotlin.math.abs
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 data class Hit constructor(val x: Int, val y: Int, val z: Int) {
     fun manhattanDist(): Int {
         return abs(x) + abs(y) + abs(z)
     }
+
     override fun equals(other: Any?): Boolean {
         return other is Hit && other.x == x && other.y == y && other.z == z
     }
@@ -34,8 +37,8 @@ fun maxMatches(one: LocalScanner, two: LocalScanner): Pair<Hit, Int> {
         two.hits.map { twoHit ->
             Hit(oneHit.x - twoHit.x, oneHit.y - twoHit.y, oneHit.z - twoHit.z)
         }
-    }.flatten().groupingBy { it }.eachCount().entries.maxByOrNull { it.value }
-    return Pair(topCount!!.key, topCount.value)
+    }.flatten().groupingBy { it }.eachCount().entries.maxByOrNull { it.value }!!
+    return Pair(topCount.key, topCount.value)
 }
 
 fun buildTwists(): List<Transform> {
@@ -70,6 +73,7 @@ fun buildTwists(): List<Transform> {
 
 typealias Transform = (Hit) -> Hit
 
+@OptIn(ExperimentalTime::class)
 fun main() {
     // val fileName = "src/day19/sample.txt"
     val fileName = "data/day19.txt"
@@ -90,43 +94,50 @@ fun main() {
 
     val matches = mutableListOf(scanners.removeFirst())
 
-    val distances = mutableListOf(Hit(0,0,0))
+    val distances = mutableListOf(Hit(0, 0, 0))
 
-    while (scanners.isNotEmpty()) {
-        candSearch@ for (candidate in scanners) {
-            val transformations = twists.map { twist -> candidate.transform(twist) }
+    val elapsedOne = measureTime {
+        while (scanners.isNotEmpty()) {
+            candSearch@ for (candidate in scanners) {
+                val transformations = twists.map { twist -> candidate.transform(twist) }
 
-            for (localScanner in matches) {
-                for (transformation in transformations) {
-                    val match = maxMatches(localScanner, transformation)
+                for (localScanner in matches) {
+                    for (transformation in transformations) {
+                        val match = maxMatches(localScanner, transformation)
 
-                    if (match.second > 11) {
-                        val newMatch = LocalScanner()
-                        val translate = match.first
-                        distances.add(translate)
-                        newMatch.hits.addAll(transformation.hits.map { hit ->
-                            Hit(hit.x + translate.x, hit.y + translate.y, hit.z + translate.z)
-                        })
-                        matches.add(newMatch)
-                        scanners.remove(candidate)
-                        break@candSearch
+                        if (match.second > 11) {
+                            val newMatch = LocalScanner()
+                            val translate = match.first
+                            distances.add(translate)
+                            newMatch.hits.addAll(transformation.hits.map { hit ->
+                                Hit(hit.x + translate.x, hit.y + translate.y, hit.z + translate.z)
+                            })
+                            matches.add(newMatch)
+                            scanners.remove(candidate)
+                            break@candSearch
+                        }
                     }
                 }
             }
         }
+
+        val uniqueHits = mutableSetOf<Hit>()
+        matches.forEach { match -> uniqueHits.addAll(match.hits) }
+
+        println(uniqueHits.size)
     }
 
-    val uniqueHits = mutableSetOf<Hit>()
-    matches.forEach { match -> uniqueHits.addAll(match.hits) }
+    val elapsedTwo = measureTime {
+        var maxManhattanDist = 0
 
-    println(uniqueHits.size)
-
-    var maxManhattanDist = 0
-
-    for (one in distances) {
-        for (two in distances) {
-            maxManhattanDist = maxManhattanDist.coerceAtLeast(Hit(one.x-two.x, one.y-two.y, one.z-two.z).manhattanDist())
+        for (one in distances) {
+            for (two in distances) {
+                maxManhattanDist =
+                    maxManhattanDist.coerceAtLeast(Hit(one.x - two.x, one.y - two.y, one.z - two.z).manhattanDist())
+            }
         }
+        println("manhattanDist: $maxManhattanDist")
     }
-    println("manhattanDist: $maxManhattanDist")
+
+    println("times: $elapsedOne, $elapsedTwo")
 }
