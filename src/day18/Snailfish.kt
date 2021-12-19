@@ -3,6 +3,8 @@ package day18
 import java.io.File
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 open class Element() {
     fun add(other: Element): Element {
@@ -163,7 +165,7 @@ fun process(tree: Element): Element {
 
     while (shouldContinue) {
         top = loopExplode(top)
-        var splitAttempt = trySplit(top)
+        val splitAttempt = trySplit(top)
         top = splitAttempt.first
         shouldContinue = splitAttempt.second
     }
@@ -171,30 +173,42 @@ fun process(tree: Element): Element {
     return top
 }
 
+@OptIn(ExperimentalTime::class)
 fun main() {
+
     val fileName = "data/day18.txt"
 
     val lines = File(fileName).readLines()
-    val nums = lines.map{build(it)}
 
-    val result = nums.reduce{ a,b ->
-        val result = process(a.add(b))
-        result
+    val elapsedOne = measureTime {
+        val nums = lines.map{build(it)}
+
+        val result = nums.reduce{ a,b ->
+            val result = process(a.add(b))
+            result
+        }
+
+        println(result.magnitude())
     }
 
-    println(result.magnitude())
+    println("elapsedOne $elapsedOne")
 
-    var max = 0L
+    val elapsedTwo = measureTime {
+        var max = 0L
 
-    (0 until 100).forEach{ aIndex->
-        (0 until 100).forEach { bIndex ->
-            if (aIndex != bIndex) {
-                val a = build(lines[aIndex])
-                val b = build(lines[bIndex])
-                max = max.coerceAtLeast(process(a.add(b)).magnitude())
+        (0 until 100).forEach{ aIndex->
+            (0 until 100).forEach { bIndex ->
+                if (aIndex != bIndex) {
+                    val a = build(lines[aIndex])
+                    val b = build(lines[bIndex])
+                    max = max.coerceAtLeast(process(a.add(b)).magnitude())
+                }
             }
         }
+
+        println(max)
     }
 
-    println(max)
+    println("elapsedTwo: $elapsedTwo")
+
 }
